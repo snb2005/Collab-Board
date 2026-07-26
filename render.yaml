@@ -3,11 +3,16 @@ services:
     name: collab-board-backend
     env: docker
     rootDir: backend
-    plan: free
+
     envVars:
       - key: MONGODB_URL
         sync: false
-      - key: SECRET_KEY
+
+      - key: REDIS_URL
+        sync: false
+
+      - key: JWT_SECRET_KEY
         generateValue: true
-      - key: FRONTEND_URL
+
+      - key: CORS_ORIGINS_RAW
         sync: false
