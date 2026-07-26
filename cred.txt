@@ -1,0 +1,5 @@
+siddharthaiiita_db_user
+
+EMuR1cnRb75NxJDY
+
+mongodb+srv://siddharthaiiita_db_user:EMuR1cnRb75NxJDY@cluster0.avotd1b.mongodb.net/

@@ -1,0 +1,320 @@
+Tech Stack
+Frontend
+Technology
+Why
+React
+Industry standard
+TypeScript
+Type safety, maintainability
+Vite
+Fast development
+Tailwind CSS
+Quick UI development
+Fabric.js (recommended)
+Professional canvas engine (drawing, selection, resize, grouping, export)
+React Router
+Routing
+Axios
+REST API client
+Socket.IO Client
+Real-time communication
+
+
+Backend
+Technology
+Why
+FastAPI
+High performance, async, automatic Swagger docs
+Python 3.12+
+Clean backend development
+Uvicorn
+ASGI server
+Pydantic
+Validation
+Motor
+Async MongoDB driver
+Socket.IO (Python)
+Real-time collaboration
+JWT
+Authentication
+Passlib + bcrypt
+Password hashing
+
+
+Database
+Technology
+Purpose
+MongoDB
+Users, Workspaces, Whiteboards, Comments, Versions
+
+MongoDB fits naturally because whiteboards are JSON-like documents.
+
+Cache
+Technology
+Purpose
+Redis
+Presence, active users, invite tokens, rate limiting, caching
+
+
+File Storage
+Initially
+Local Storage
+Later
+AWS S3 / MinIO
+No architecture changes needed.
+
+Deployment
+Technology
+Docker
+Docker Compose
+Nginx (later)
+GitHub Actions (later)
+
+
+Overall Architecture
+Frontend
+      │
+ REST + Socket.IO
+      │
+FastAPI Backend
+      │
+────────────────────────
+│                     │
+MongoDB            Redis
+
+Proposed Folder Structure
+Root
+collab-board/
+
+│
+├── frontend/
+│
+├── backend/
+│
+├── docker/
+│
+├── docs/
+│
+├── scripts/
+│
+├── .env
+│
+├── docker-compose.yml
+│
+└── README.md
+
+Frontend
+frontend/
+
+src/
+
+├── assets/
+
+├── components/
+│
+├── pages/
+│   ├── Landing/
+│   ├── Login/
+│   ├── Register/
+│   ├── Dashboard/
+│   ├── Workspace/
+│   └── Whiteboard/
+│
+├── features/
+│   ├── auth/
+│   ├── workspace/
+│   ├── whiteboard/
+│   ├── comments/
+│   ├── notifications/
+│   └── versions/
+│
+├── hooks/
+│
+├── services/
+│   ├── api/
+│   └── socket/
+│
+├── store/
+│
+├── routes/
+│
+├── types/
+│
+├── utils/
+│
+└── App.tsx
+
+Backend
+backend/
+
+app/
+
+├── api/
+│
+├── core/
+│
+├── db/
+│
+├── middleware/
+│
+├── models/
+│
+├── schemas/
+│
+├── services/
+│
+├── websocket/
+│
+├── utils/
+│
+└── main.py
+
+API Layer
+api/
+
+├── auth.py
+
+├── users.py
+
+├── workspace.py
+
+├── whiteboard.py
+
+├── comments.py
+
+├── versions.py
+
+├── notifications.py
+
+└── exports.py
+Only request handling.
+No business logic.
+
+Services
+This is where the project becomes clean.
+services/
+
+├── auth_service.py
+
+├── workspace_service.py
+
+├── whiteboard_service.py
+
+├── permission_service.py
+
+├── version_service.py
+
+├── comment_service.py
+
+├── notification_service.py
+
+├── export_service.py
+
+├── presence_service.py
+
+└── search_service.py
+All business logic lives here.
+
+Database Models
+models/
+
+├── user.py
+
+├── workspace.py
+
+├── whiteboard.py
+
+├── version.py
+
+├── comment.py
+
+└── notification.py
+
+Validation Schemas
+schemas/
+
+├── auth.py
+
+├── workspace.py
+
+├── whiteboard.py
+
+├── comment.py
+
+└── version.py
+
+WebSocket
+websocket/
+
+├── connection_manager.py
+
+├── events.py
+
+├── handlers.py
+
+└── rooms.py
+Responsible only for real-time communication.
+
+Core
+core/
+
+├── config.py
+
+├── security.py
+
+├── jwt.py
+
+├── logging.py
+
+└── constants.py
+
+Database
+db/
+
+├── mongodb.py
+
+├── redis.py
+
+└── indexes.py
+
+Middleware
+middleware/
+
+├── auth.py
+
+├── permissions.py
+
+├── rate_limit.py
+
+└── logging.py
+
+Utils
+utils/
+
+├── hashing.py
+
+├── helpers.py
+
+├── validators.py
+
+└── file_utils.py
+
+Future Scalability
+Because services are separated, later we can split them into microservices if needed:
+Gateway
+
+│
+
+├── Auth Service
+
+├── Workspace Service
+
+├── Whiteboard Service
+
+├── Notification Service
+
+├── Export Service
+
+└── Search Service
+No code rewrite required.
+

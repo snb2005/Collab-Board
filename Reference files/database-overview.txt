@@ -1,0 +1,327 @@
+Database Overview
+Users
+    │
+    │ owns
+    ▼
+Workspaces
+    │
+    ├──────────────┐
+    ▼              ▼
+WorkspaceMembers   Whiteboards
+                        │
+          ┌─────────────┴─────────────┐
+          ▼                           ▼
+      Versions                  Comments
+                        │
+                        ▼
+                 Notifications
+
+
+1. Users Collection
+{
+    _id: ObjectId,
+
+    name: String,
+
+    email: String,          // unique
+
+    passwordHash: String,
+
+    avatar: String,
+
+    createdAt: Date,
+
+    updatedAt: Date
+}
+
+Indexes
+email (unique)
+
+
+2. Workspaces Collection
+A workspace is the top-level collaboration entity.
+{
+    _id: ObjectId,
+
+    name: String,
+
+    description: String,
+
+    ownerId: ObjectId,
+
+    visibility: "public" | "private",
+
+    passwordHash: String | null,
+
+    createdAt: Date,
+
+    updatedAt: Date
+}
+
+Indexes
+ownerId
+
+visibility
+
+name (text)
+
+
+3. WorkspaceMembers Collection
+Instead of embedding members inside the workspace, keep them separate.
+{
+    _id: ObjectId,
+
+    workspaceId: ObjectId,
+
+    userId: ObjectId,
+
+    role:
+        "owner"
+        | "admin"
+        | "editor"
+        | "commenter"
+        | "viewer",
+
+    joinedAt: Date
+}
+
+Indexes
+workspaceId
+
+userId
+
+(workspaceId, userId) UNIQUE
+
+
+4. Whiteboards Collection
+Each workspace can contain many whiteboards.
+{
+    _id: ObjectId,
+
+    workspaceId: ObjectId,
+
+    title: String,
+
+    boardData: {
+
+        objects: [ ... ],
+
+        background: "#ffffff",
+
+        zoom: 1
+    },
+
+    createdBy: ObjectId,
+
+    createdAt: Date,
+
+    updatedAt: Date
+}
+
+Indexes
+workspaceId
+
+
+5. Versions Collection
+Each save creates one version.
+{
+    _id: ObjectId,
+
+    whiteboardId: ObjectId,
+
+    versionNumber: Number,
+
+    snapshot: {
+
+        objects: [...]
+
+    },
+
+    snapshotHash: String,
+
+    message: String,
+
+    createdBy: ObjectId,
+
+    createdAt: Date
+}
+
+Indexes
+whiteboardId
+
+(whiteboardId, versionNumber)
+
+
+6. Comments Collection
+Comments belong to whiteboards.
+If attached to a shape, store its object ID.
+{
+    _id: ObjectId,
+
+    whiteboardId: ObjectId,
+
+    objectId: String | null,
+
+    authorId: ObjectId,
+
+    text: String,
+
+    parentCommentId: ObjectId | null,
+
+    resolved: Boolean,
+
+    createdAt: Date,
+
+    updatedAt: Date
+}
+
+Supports
+Threaded replies
+Shape comments
+Board comments
+Indexes
+whiteboardId
+
+objectId
+
+parentCommentId
+
+
+7. Notifications Collection
+{
+    _id: ObjectId,
+
+    userId: ObjectId,
+
+    type:
+        "invite"
+        | "comment"
+        | "version"
+        | "member_joined"
+        | "permission_changed",
+
+    title: String,
+
+    message: String,
+
+    metadata: {
+
+    },
+
+    read: false,
+
+    createdAt: Date
+}
+
+Indexes
+userId
+
+read
+
+
+Redis (Not MongoDB)
+Redis stores only temporary state.
+Workspace Presence
+workspace:{workspaceId}
+
+↓
+
+Set
+
+user1
+
+user2
+
+user3
+
+
+Whiteboard Presence
+whiteboard:{whiteboardId}
+
+↓
+
+Set
+
+user1
+
+user2
+
+
+Cursor Positions
+cursor:{whiteboardId}
+
+↓
+
+Hash
+
+user1 -> (120,350)
+
+user2 -> (250,800)
+
+
+Invite Tokens
+invite:{token}
+
+↓
+
+workspaceId
+
+expires in 24 hrs
+
+
+Rate Limiting
+rate:userId
+
+↓
+
+count
+
+↓
+
+TTL
+
+
+Relationships
+User
+ │
+ ├──────────── owns ───────────► Workspace
+ │                                  │
+ │                                  │
+ │                                  ▼
+ │                         WorkspaceMember
+ │                                  │
+ │                                  ▼
+ │                            Whiteboard
+ │                          ┌──────┴────────┐
+ │                          ▼               ▼
+ │                     Version         Comment
+ │
+ └──────────────► Notification
+
+
+Why separate WorkspaceMembers instead of storing members in the workspace?
+Suppose you stored members like this:
+{
+  "members": [
+    { "userId": 1, "role": "editor" },
+    { "userId": 2, "role": "viewer" }
+  ]
+}
+
+This works initially, but becomes inefficient when:
+a workspace has hundreds or thousands of members,
+you need to query "all workspaces for user X",
+you frequently update roles.
+With a dedicated WorkspaceMembers collection, those operations are indexed and efficient.
+
+Final Collections (v1)
+Users
+Workspaces
+WorkspaceMembers
+Whiteboards
+Versions
+Comments
+Notifications
+
+This schema is intentionally lean. It covers all the functionality you've planned while leaving room to add future features like invitations, templates, AI assistants, activity logs, or organizations without requiring a major redesign.
+

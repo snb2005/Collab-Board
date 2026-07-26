@@ -1,0 +1,581 @@
+Yes. Before writing code, I'd recommend documenting the Low-Level Design (LLD). Think of it in layers:
+Component/Class Design (modules and responsibilities)
+Sequence Diagrams (how requests flow)
+Interaction between services
+State maintained by each component
+
+1. Backend Low-Level Design
+                         FastAPI Backend
+                                 │
+        ┌────────────────────────┼────────────────────────┐
+        │                        │                        │
+        ▼                        ▼                        ▼
+   REST Controllers        WebSocket Gateway        Middleware
+        │                        │                    │
+        └──────────────┬─────────┘                    │
+                       ▼                              │
+                  Service Layer                       │
+──────────────────────────────────────────────────────────────────
+ AuthService
+
+ WorkspaceService
+
+ WhiteboardService
+
+ PermissionService
+
+ CommentService
+
+ VersionService
+
+ NotificationService
+
+ PresenceService
+
+ SearchService
+
+ ExportService
+──────────────────────────────────────────────────────────────────
+                       │
+             Repository / DB Layer
+──────────────────────────────────────────────────────────────────
+ MongoDB
+
+ Redis
+──────────────────────────────────────────────────────────────────
+
+
+2. Responsibilities
+Auth Service
+Responsible for
+Register
+
+Login
+
+JWT
+
+Refresh Token
+
+Password Hashing
+
+Never touches workspace logic.
+
+Workspace Service
+Create Workspace
+
+Delete Workspace
+
+Update Workspace
+
+Search Workspace
+
+Get My Workspaces
+
+
+Whiteboard Service
+Create Whiteboard
+
+Delete Whiteboard
+
+Load Whiteboard
+
+Save Whiteboard
+
+Rename Whiteboard
+
+No permission logic here.
+
+Permission Service
+Centralized RBAC.
+Every protected API asks
+Can user edit?
+
+Can user comment?
+
+Can user export?
+
+Can user invite?
+
+instead of implementing checks everywhere.
+
+Presence Service
+Uses Redis.
+Stores
+Workspace Users
+
+Whiteboard Users
+
+Cursor Position
+
+
+Version Service
+Compute Hash
+
+Compare Previous
+
+Create Version
+
+Restore Version
+
+List Versions
+
+
+Comment Service
+Create Comment
+
+Reply
+
+Resolve
+
+Delete
+
+
+Notification Service
+Create Notification
+
+Read Notification
+
+Delete Notification
+
+
+Export Service
+PNG
+
+PDF
+
+SVG
+
+JSON
+
+
+3. Request Flow
+Example
+Create Whiteboard
+Client
+
+↓
+
+WhiteboardController
+
+↓
+
+PermissionService
+
+↓
+
+WhiteboardService
+
+↓
+
+Mongo Repository
+
+↓
+
+MongoDB
+
+↓
+
+Response
+
+Notice
+Controller never talks directly to MongoDB.
+
+4. WebSocket Layer
+Socket Connected
+
+↓
+
+Authenticate JWT
+
+↓
+
+Join Workspace
+
+↓
+
+Join Whiteboard
+
+↓
+
+Connection Manager
+
+↓
+
+Broadcast Events
+
+
+Connection Manager stores
+workspaceId
+
+↓
+
+connected sockets
+
+and
+whiteboardId
+
+↓
+
+connected sockets
+
+
+5. Redis Usage
+workspace:123
+
+↓
+
+Set
+
+user1
+
+user2
+
+user3
+
+
+whiteboard:12
+
+↓
+
+Set
+
+socket1
+
+socket2
+
+
+cursor:board12
+
+↓
+
+user
+
+↓
+
+(x,y)
+
+
+Sequence Diagram 1
+User Login
+User
+ │
+ │ Login
+ ▼
+Frontend
+ │
+ │ POST /login
+ ▼
+Auth Controller
+ │
+ ▼
+Auth Service
+ │
+ ▼
+MongoDB
+ │
+Check User
+ │
+Password Verify
+ │
+JWT Generate
+ │
+▼
+Frontend
+ │
+Dashboard
+
+
+Sequence Diagram 2
+Create Workspace
+User
+ │
+ ▼
+Frontend
+
+ │ POST /workspace
+
+ ▼
+Workspace Controller
+
+ ▼
+Permission (Authenticated?)
+
+ ▼
+Workspace Service
+
+ ▼
+MongoDB
+
+ ▼
+Workspace Created
+
+ ▼
+Frontend
+
+
+Sequence Diagram 3
+Join Workspace
+User
+
+ │ Search
+
+ ▼
+
+Workspace Controller
+
+ ▼
+
+Workspace Service
+
+ ▼
+
+MongoDB
+
+ ▼
+
+Results
+
+ ▼
+
+Frontend
+
+
+User clicks Join
+
+ ▼
+
+Permission Service
+
+ ▼
+
+Password Check
+
+ ▼
+
+WorkspaceMembers
+
+ ▼
+
+Success
+
+
+Sequence Diagram 4
+Open Whiteboard
+User
+
+ ▼
+
+Frontend
+
+ │ GET /whiteboard
+
+ ▼
+
+Whiteboard Controller
+
+ ▼
+
+Permission Service
+
+ ▼
+
+Whiteboard Service
+
+ ▼
+
+MongoDB
+
+ ▼
+
+Board JSON
+
+ ▼
+
+Frontend
+
+
+Sequence Diagram 5
+Live Drawing
+User A
+
+ │ Draw Rectangle
+
+ ▼
+
+Socket.IO
+
+ ▼
+
+WebSocket Gateway
+
+ ▼
+
+Connection Manager
+
+ ▼
+
+Broadcast
+
+ ├────────► User B
+
+ ├────────► User C
+
+ └────────► User D
+
+Notice
+No MongoDB write for every draw event.
+
+Sequence Diagram 6
+Save Version
+User
+
+ │ Save
+
+ ▼
+
+Version Controller
+
+ ▼
+
+Version Service
+
+ ▼
+
+Fetch Current Board
+
+ ▼
+
+Generate Hash
+
+ ▼
+
+Compare Previous Hash
+
+ ┌───────────────┐
+ │Same?          │
+ └──────┬────────┘
+        │
+   Yes──┘
+
+Return
+
+        │
+
+        ▼
+
+Create Version
+
+ ▼
+
+MongoDB
+
+ ▼
+
+Success
+
+
+Sequence Diagram 7
+Comment
+User
+
+ │ Add Comment
+
+ ▼
+
+Comment Controller
+
+ ▼
+
+Permission Service
+
+ ▼
+
+Comment Service
+
+ ▼
+
+MongoDB
+
+ ▼
+
+Notification Service
+
+ ▼
+
+Notification Stored
+
+ ▼
+
+Socket Broadcast
+
+ ▼
+
+Other Users
+
+
+Sequence Diagram 8
+Export
+User
+
+ │ Export PDF
+
+ ▼
+
+Export Controller
+
+ ▼
+
+Permission Service
+
+ ▼
+
+Export Service
+
+ ▼
+
+Generate PDF
+
+ ▼
+
+Return File
+
+
+Overall LLD
+                  React Frontend
+                          │
+             REST + WebSocket APIs
+                          │
+        ┌─────────────────┴─────────────────┐
+        │                                   │
+        ▼                                   ▼
+ REST Controllers                  WebSocket Gateway
+        │                                   │
+        └──────────────┬────────────────────┘
+                       ▼
+                 Service Layer
+ ┌──────────────────────────────────────────────────────┐
+ │ Auth │ Workspace │ Whiteboard │ Version │ Comment    │
+ │ Permission │ Notification │ Presence │ Export │ Search│
+ └──────────────────────────────────────────────────────┘
+                       │
+               Repository Layer
+                 │             │
+              MongoDB       Redis
+
+One architectural improvement I'd strongly recommend
+Introduce a Repository layer between your services and MongoDB. Instead of WorkspaceService calling MongoDB directly, have it call WorkspaceRepository. The repository encapsulates all database operations.
+For example:
+WorkspaceController
+        ↓
+WorkspaceService
+        ↓
+WorkspaceRepository
+        ↓
+MongoDB
+
+This has several advantages:
+Services remain focused on business logic rather than database queries.
+Swapping MongoDB for another database in the future becomes much easier.
+Unit testing is simpler because repositories can be mocked.
+The overall design aligns with common enterprise architectures, which is a good discussion point in interviews.
+

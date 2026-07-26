@@ -1,0 +1,208 @@
+Phase 1 — Foundation & Authentication
+Goal: Build a secure application skeleton where users can sign in and reach their dashboard.
+Backend
+Set up FastAPI project structure.
+Configure MongoDB and Redis connections.
+JWT authentication (access + refresh tokens).
+User registration.
+User login.
+User profile (/me).
+Authentication middleware.
+Global exception handling and logging.
+Environment configuration.
+Frontend
+Landing page.
+Login page.
+Register page.
+Protected routes.
+Authentication state management.
+Database
+Users
+Deliverable
+User
+    ↓
+Register/Login
+    ↓
+Dashboard
+
+At the end of this phase, authentication is complete and reusable by every future module.
+
+Phase 2 — Workspace Management
+Goal: Users can create, join, and manage collaborative workspaces.
+Backend
+Create workspace.
+Public/private workspace.
+Password-protected workspaces.
+Search workspaces.
+Join workspace.
+Leave workspace.
+Workspace member management.
+Role-based access (Owner, Admin, Editor, Commenter, Viewer).
+Frontend
+Dashboard.
+My Workspaces.
+Search Workspaces.
+Workspace creation dialog.
+Workspace settings.
+Database
+Workspaces
+WorkspaceMembers
+Deliverable
+Dashboard
+      ↓
+Create Workspace
+      ↓
+Join Workspace
+      ↓
+Workspace Home
+
+Now collaboration exists, even though whiteboards don't yet.
+
+Phase 3 — Whiteboard Module (Core)
+Goal: Add professional whiteboards inside a workspace.
+Backend
+Create whiteboard.
+Rename/Delete whiteboard.
+Load/save whiteboard.
+Whiteboard CRUD APIs.
+Frontend
+Whiteboard list.
+Whiteboard page.
+Integrate Fabric.js (or chosen canvas library).
+Drawing tools:
+Pencil
+Rectangle
+Circle
+Arrow
+Text
+Eraser
+Selection
+Undo/Redo
+Zoom/Pan
+Database
+Whiteboards
+Deliverable
+Workspace
+      ↓
+Create Whiteboard
+      ↓
+Professional Drawing Board
+
+At this point, the app is already useful for a single user.
+
+Phase 4 — Real-Time Collaboration
+Goal: Multiple users collaborate simultaneously.
+Backend
+WebSocket authentication.
+Room management.
+Connection manager.
+Presence service (Redis).
+Broadcast drawing events.
+Live cursor.
+Online users.
+Frontend
+Live synchronization.
+Cursor rendering.
+Member presence.
+Reconnection handling.
+Redis
+Workspace presence.
+Whiteboard presence.
+Cursor positions.
+Deliverable
+User A Draws
+      ↓
+Backend
+      ↓
+Users B, C, D instantly see changes
+
+Now the product becomes a true collaborative whiteboard.
+
+Phase 5 — Collaboration Features
+Goal: Make collaboration production-ready.
+Backend
+Version history.
+Hash-based duplicate detection.
+Restore version.
+Comments and threaded replies.
+Notifications.
+Export (PNG, SVG, PDF, JSON).
+Frontend
+Version panel.
+Comments sidebar.
+Notification center.
+Export dialog.
+Database
+Versions
+Comments
+Notifications
+Deliverable
+A collaborative workspace with:
+live editing,
+comments,
+version history,
+exports.
+This is already a strong resume project.
+
+Phase 6 — Production Readiness & Polish
+Goal: Improve quality, performance, and maintainability.
+Backend
+Repository pattern.
+Better error handling.
+Redis caching where useful.
+Rate limiting.
+API documentation.
+Unit tests.
+Integration tests.
+Docker & Docker Compose.
+Logging and monitoring hooks.
+Frontend
+Better UI/UX.
+Loading states.
+Error boundaries.
+Responsive layout.
+Performance optimization.
+Documentation
+Architecture diagram.
+Sequence diagrams.
+API documentation.
+Deployment guide.
+Screenshots/GIFs.
+Deliverable
+A polished, deployable application suitable for demonstrations and interviews.
+
+Final Roadmap
+Phase 1
+Authentication
+        │
+        ▼
+Phase 2
+Workspace Management
+        │
+        ▼
+Phase 3
+Whiteboard Engine
+        │
+        ▼
+Phase 4
+Real-time Collaboration
+        │
+        ▼
+Phase 5
+Versions • Comments • Export • Notifications
+        │
+        ▼
+Phase 6
+Optimization • Testing • Deployment
+
+
+Why this order?
+Each phase builds directly on the previous one without introducing unnecessary dependencies:
+Phase 1 establishes identity and security.
+Phase 2 introduces collaboration boundaries (workspaces and permissions).
+Phase 3 delivers a fully functional single-user whiteboard.
+Phase 4 adds real-time capabilities using the existing whiteboard APIs.
+Phase 5 layers advanced collaboration features on top of a stable collaborative core.
+Phase 6 focuses entirely on engineering quality rather than new features.
+By the end of every phase, you'll have a working, demoable product, making debugging easier and allowing you to showcase steady progress rather than waiting until the very end. This approach also keeps the architecture modular, so adding future features like AI assistance, templates, or plugins won't require major restructuring.
+
